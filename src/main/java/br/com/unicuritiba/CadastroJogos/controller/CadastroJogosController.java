@@ -1,5 +1,6 @@
 package br.com.unicuritiba.CadastroJogos.controller;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,7 +16,7 @@ import br.com.unicuritiba.CadastroJogos.repositories.CadastroJogosRepository;
 public class CadastroJogosController {
 
     @Autowired
-    CadastroJogosRepository repository;
+    private CadastroJogosRepository repository;
 
     @GetMapping
     public ResponseEntity<List<Jogo>> getJogos() {
@@ -24,13 +25,14 @@ public class CadastroJogosController {
     }
 
     @PostMapping
-    public ResponseEntity<Jogo> saveJogo(@RequestBody Jogo jogo) {
+    public ResponseEntity<String> saveJogo(@RequestBody Jogo jogo) {
         Jogo jogoSalvo = repository.save(jogo);
-        return ResponseEntity.ok(jogoSalvo);
+        return ResponseEntity.created(URI.create("/jogos/" + jogoSalvo.getId()))
+                .body("Jogo cadastrado com sucesso! ID: " + jogoSalvo.getId());
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Jogo> updateJogo(@PathVariable long id, @RequestBody Jogo jogoAtualizado) {
+    public ResponseEntity<String> updateJogo(@PathVariable long id, @RequestBody Jogo jogoAtualizado) {
         Optional<Jogo> jogoExistente = repository.findById(id);
 
         if (jogoExistente.isPresent()) {
@@ -38,9 +40,12 @@ public class CadastroJogosController {
             jogo.setNome(jogoAtualizado.getNome());
             jogo.setGenero(jogoAtualizado.getGenero());
             jogo.setPreco(jogoAtualizado.getPreco());
+            jogo.setDesenvolvedora(jogoAtualizado.getDesenvolvedora());
+            jogo.setPlataforma(jogoAtualizado.getPlataforma());
+            jogo.setDataLancamento(jogoAtualizado.getDataLancamento());
 
             repository.save(jogo);
-            return ResponseEntity.ok(jogo);
+            return ResponseEntity.ok("Jogo com ID " + id + " atualizado com sucesso.");
         }
         return ResponseEntity.notFound().build();
     }
@@ -49,7 +54,7 @@ public class CadastroJogosController {
     public ResponseEntity<String> removeJogo(@PathVariable long id) {
         if (repository.existsById(id)) {
             repository.deleteById(id);
-            return ResponseEntity.ok("Jogo com id " + id + " foi removido com sucesso.");
+            return ResponseEntity.ok("Jogo com ID " + id + " foi removido com sucesso.");
         }
         return ResponseEntity.notFound().build();
     }
